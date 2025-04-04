@@ -1,0 +1,309 @@
+Below is a detailed plan for developing an AI agent for task allocation, as per the problem statement provided. The plan is structured in a phase-step manner, outlining what each phase aims to achieve, the tools to be used, the logic or ideas behind each step, the planned directory structure, and the specific files involved with their paths. This plan ensures a working prototype that meets all requirements, focusing on accuracy and precision in task allocation using AWS SageMaker, with data stored in MongoDB.
+
+---
+
+## Project Development Plan
+
+### Project Overview
+The goal is to create an AI-powered task allocation system that matches tasks to employees based on skills and availability, using AWS SageMaker as the AI studio. The system includes a frontend with authentication (Clerk), role-based dashboards (supervisor and employee), a backend for API and logic handling, and a MongoDB database. The focus is on automated, precise task assignment by the AI agent.
+
+### Tools
+- **Backend**: Python with FastAPI (upgraded from Flask/Unicorn for async capabilities and better integration with AI services)
+- **AI Studio**: AWS SageMaker
+- **Frontend**: React with TypeScript, Vite, Tailwind CSS
+- **Authentication**: Clerk
+- **Database**: MongoDB Atlas (free cluster)
+
+### Planned Directory Structure
+```
+task-allocation-ai/
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── TaskForm.tsx
+│   │   │   ├── SkillForm.tsx
+│   │   │   ├── TaskList.tsx
+│   │   │   └── ...
+│   │   ├── pages/
+│   │   │   ├── SupervisorDashboard.tsx
+│   │   │   ├── EmployeeDashboard.tsx
+│   │   │   └── ...
+│   │   ├── App.tsx
+│   │   ├── main.tsx
+│   │   └── ...
+│   ├── public/
+│   ├── package.json
+│   ├── tsconfig.json
+│   ├── tailwind.config.js
+│   └── ...
+├── backend/
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── main.py
+│   │   ├── models/
+│   │   │   ├── user.py
+│   │   │   ├── skill.py
+│   │   │   ├── task.py
+│   │   │   ├── availability.py
+│   │   │   └── ...
+│   │   ├── routes/
+│   │   │   ├── user.py
+│   │   │   ├── skill.py
+│   │   │   ├── task.py
+│   │   │   ├── availability.py
+│   │   │   └── ...
+│   │   ├── services/
+│   │   │   ├── database.py
+│   │   │   ├── task_allocation.py
+│   │   │   └── ...
+│   │   └── ...
+│   ├── venv/
+│   ├── requirements.txt
+│   └── ...
+├── docs/
+│   ├── api.md
+│   ├── setup.md
+│   └── ...
+└── README.md
+```
+
+---
+
+## Development Phases
+
+### Phase 1: Project Setup and Authentication
+**Objective**: Establish the project foundation, set up frontend and backend environments, and implement authentication using Clerk.
+
+**Steps**:
+1. **Initialize Project Structure**
+   - Create the root folder `task-allocation-ai` and subfolders `frontend/` and `backend/`.
+   - Tools: Terminal/command line.
+
+2. **Frontend Setup**
+   - Initialize a React TypeScript project with Vite.
+   - Command: `npm create vite@latest frontend -- --template react-ts`
+   - Install Tailwind CSS for styling: Follow Tailwind’s Vite setup guide.
+   - Install Clerk for authentication: `npm install @clerk/clerk-react`
+   - Logic: Configure Clerk to handle sign-up/sign-in with role-based redirection (supervisor or employee).
+
+3. **Backend Setup**
+   - Create a virtual environment: `python -m venv venv`
+   - Activate it and install FastAPI, Uvicorn, and Motor: `pip install fastapi uvicorn motor`
+   - Logic: Use FastAPI for async API handling, Motor for MongoDB integration.
+
+4. **Database Setup**
+   - Sign up for MongoDB Atlas, create a free cluster, and obtain the connection string.
+   - Tools: MongoDB Atlas web interface.
+
+5. **Authentication Implementation**
+   - Configure Clerk in the frontend to manage user authentication.
+   - Logic: Store user roles (supervisor/employee) in Clerk metadata or MongoDB for access control.
+
+**Files Involved**:
+- `frontend/package.json`: Dependencies and scripts.
+- `frontend/tailwind.config.js`: Tailwind CSS configuration.
+- `frontend/src/App.tsx`: Main app component with Clerk provider.
+- `frontend/src/main.tsx`: Entry point for React.
+- `backend/app/main.py`: FastAPI app initialization.
+- `backend/requirements.txt`: List of Python dependencies (e.g., fastapi, uvicorn, motor).
+
+---
+
+### Phase 2: Database Schema and Models
+**Objective**: Define and implement the data models and database connection to store all required data.
+
+**Steps**:
+1. **Define Database Schemas**
+   - **Users**: `_id`, `clerk_id`, `role` (supervisor/employee), `name`, `email`.
+   - **Skills**: `_id`, `user_id`, `skill_name`, `proficiency_level`.
+   - **Tasks**: `_id`, `supervisor_id`, `description`, `required_skills`, `due_date`, `start_date`, `assigned_to`, `status`.
+   - **Availability**: `_id`, `user_id`, `available_from`, `available_to`.
+   - Logic: Schemas support task allocation by linking skills and availability to users and tasks.
+
+2. **Create Pydantic Models**
+   - Define models for data validation and serialization in FastAPI.
+   - Tools: Pydantic (included with FastAPI).
+
+3. **Set Up MongoDB Connection**
+   - Use Motor to connect FastAPI to MongoDB Atlas.
+   - Logic: Implement CRUD operations for users, skills, tasks, and availability.
+
+**Files Involved**:
+- `backend/app/models/user.py`: Pydantic model for User.
+- `backend/app/models/skill.py`: Pydantic model for Skill.
+- `backend/app/models/task.py`: Pydantic model for Task.
+- `backend/app/models/availability.py`: Pydantic model for Availability.
+- `backend/app/services/database.py`: MongoDB connection and CRUD functions.
+
+---
+
+### Phase 3: User Interfaces for Supervisor and Employee
+**Objective**: Build role-based dashboards and forms for supervisors and employees.
+
+**Steps**:
+1. **Supervisor Dashboard**
+   - Features: Add/remove tasks, view assigned tasks with employee details.
+   - Logic: Form for task input (description, skills, dates), list to display tasks.
+
+2. **Employee Dashboard**
+   - Features: Add skills manually, view assigned tasks with details (due date, start date).
+   - Logic: Simple skill input form (resume parsing deferred), task list display.
+
+3. **Authentication Guards**
+   - Use Clerk’s role-based access to restrict features by role.
+   - Tools: Clerk’s React hooks (e.g., `useAuth`, `useUser`).
+
+**Files Involved**:
+- `frontend/src/pages/SupervisorDashboard.tsx`: Supervisor UI.
+- `frontend/src/pages/EmployeeDashboard.tsx`: Employee UI.
+- `frontend/src/components/TaskForm.tsx`: Form for task creation.
+- `frontend/src/components/SkillForm.tsx`: Form for skill input.
+- `frontend/src/components/TaskList.tsx`: Reusable task list component.
+
+---
+
+### Phase 4: Backend APIs
+**Objective**: Develop APIs to handle data operations and serve the frontend.
+
+**Steps**:
+1. **User APIs**
+   - Endpoints: GET `/users/{id}`, PATCH `/users/{id}`.
+   - Logic: Retrieve and update user details.
+
+2. **Skill APIs**
+   - Endpoints: POST `/skills`, GET `/skills/{user_id}`.
+   - Logic: Add and retrieve employee skills.
+
+3. **Task APIs**
+   - Endpoints: POST `/tasks`, GET `/tasks`, PATCH `/tasks/{id}`.
+   - Logic: Create tasks (supervisor only), fetch tasks by role, update status.
+
+4. **Availability APIs**
+   - Endpoints: POST `/availability`, GET `/availability/{user_id}`.
+   - Logic: Set and retrieve employee availability.
+
+**Files Involved**:
+- `backend/app/routes/user.py`: User-related endpoints.
+- `backend/app/routes/skill.py`: Skill-related endpoints.
+- `backend/app/routes/task.py`: Task-related endpoints.
+- `backend/app/routes/availability.py`: Availability-related endpoints.
+- `backend/app/main.py`: Mount all routes into the FastAPI app.
+
+---
+
+### Phase 5: AI Agent for Task Allocation
+**Objective**: Implement the core AI functionality using SageMaker for automated task assignment.
+
+**Steps**:
+1. **Prepare Data**
+   - Logic: Extract task requirements (skills, dates) and employee data (skills, availability) from MongoDB.
+   - Tools: Python, Motor.
+
+2. **Develop Matching Logic**
+   - Logic: Create a rule-based algorithm to score employees based on skill overlap and availability.
+   - Example: Score = (matching_skills / required_skills) * availability_factor.
+   - Tools: Python.
+
+3. **Integrate SageMaker**
+   - Logic: Train a simple ML model (e.g., logistic regression) on SageMaker with synthetic data (task features, employee features → suitability score).
+   - Deploy as an endpoint and call from the backend.
+   - Tools: AWS SageMaker, boto3 (Python SDK).
+
+4. **Automate Assignment**
+   - Logic: On task creation, trigger the AI agent to assign it to the highest-scoring available employee and update the task in MongoDB.
+   - Tools: FastAPI, SageMaker endpoint.
+
+**Files Involved**:
+- `backend/app/services/task_allocation.py`: Matching logic and SageMaker integration.
+- (Optional) `backend/sagemaker_train.py`: Script for training and deploying the SageMaker model.
+
+---
+
+### Phase 6: Testing and Documentation
+**Objective**: Ensure the system works as intended and provide clear documentation.
+
+**Steps**:
+1. **Unit Tests**
+   - Test APIs and AI logic.
+   - Tools: pytest (install via `pip install pytest`).
+
+2. **Integration Tests**
+   - Test frontend-backend interaction and authentication.
+   - Tools: Playwright (for frontend, install via `npm install playwright`).
+
+3. **Documentation**
+   - Write setup instructions, API details, and AI logic explanation.
+   - Tools: Markdown.
+
+**Files Involved**:
+- `backend/tests/test_routes.py`: API tests.
+- `frontend/tests/integration.test.ts`: Frontend integration tests.
+- `docs/setup.md`: Setup guide.
+- `docs/api.md`: API documentation.
+- `README.md`: Project overview.
+
+---
+
+### Summary
+- **Phases 1-2**: Set up the foundation (tools, auth, database).
+- **Phases 3-4**: Build UI and APIs for user interaction.
+- **Phase 5**: Implement the AI agent with SageMaker for task allocation.
+- **Phase 6**: Test and document for a complete prototype.
+
+
+This plan ensures a structured approach, meeting all requirements with a focus on AI accuracy. For a hackathon, prioritize Phases 1-5 for a working demo, with Phase 6 as a polish step. Each phase is detailed enough to guide implementation by copying into an AI tool for code generation.
+
+//
+now to this phase
+this is root directory structure
+task-allocation-ai/
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── TaskForm.tsx
+│   │   │   ├── SkillForm.tsx
+│   │   │   ├── TaskList.tsx
+│   │   │   └── ...
+│   │   ├── pages/
+│   │   │   ├── SupervisorDashboard.tsx
+│   │   │   ├── EmployeeDashboard.tsx
+│   │   │   └── ...
+│   │   ├── App.tsx
+│   │   ├── main.tsx
+│   │   └── ...
+│   ├── public/
+│   ├── package.json
+│   ├── tsconfig.json
+│   ├── tailwind.config.js
+│   └── ...
+├── backend/
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── main.py
+│   │   ├── models/
+│   │   │   ├── user.py
+│   │   │   ├── skill.py
+│   │   │   ├── task.py
+│   │   │   ├── availability.py
+│   │   │   └── ...
+│   │   ├── routes/
+│   │   │   ├── user.py
+│   │   │   ├── skill.py
+│   │   │   ├── task.py
+│   │   │   ├── availability.py
+│   │   │   └── ...
+│   │   ├── services/
+│   │   │   ├── database.py
+│   │   │   ├── task_allocation.py
+│   │   │   └── ...
+│   │   └── ...
+│   ├── venv/
+│   ├── requirements.txt
+│   └── ...
+├── docs/
+│   ├── api.md
+│   ├── setup.md
+│   └── ...
+└── README.md
+now remember all things u told in previous response now write the advanced working code which resolve the problem statement with execution order, cmds, file name, path, process need to be done in phase of my project where i had given the problem statement
+this is the planned directory structure
